@@ -41,7 +41,7 @@ The `ctx.body` input parameter contains the payload which Slack sends to your we
 
 Note that `ctx.body.text` contains the parameters to the webtask you typed in Slack following `/wt {webtask_name}`. This allows users to pass arbitrary input parameters. Check out [Slack documentation](https://api.slack.com/slash-commands#triggering_a_command) for more information about the input payload. 
 
-The response your command sends back to Slack is a JSON object and is fully documented in [Slack docs](https://api.slack.com/slash-commands#responding_to_a_command). The two most commonly used properties are: 
+The response your command sends back to Slack is a JSON object and is fully documented in [Slack docs](https://api.slack.com/slash-commands#responding_to_a_command). To test how it will render, use the [response builder](https://api.slack.com/docs/messages/builder). The two most commonly used properties are: 
 
 ```
 {
@@ -51,29 +51,31 @@ The response your command sends back to Slack is a JSON object and is fully docu
 }
 ```
 
-## Sync and async responses
+## Sending responses
 
-Slack allows you only 3 seconds to send a synchronous response, otherwise it will report timeout of the slash command. If your processing requires more time, as is often the case when making API calls to external services, it is a good practice to send a brief synchronous response as soon as you enter your webtask, and then send an asynchronous response once the processing has finished. You have a lot of time to send a follow up asynchronous response as long as you responded synchronously before.
+You can respond with a message that will be posted back to Slack by passing the [Slack JSON response message](https://api.slack.com/docs/messages/builder) as the second parameter to the callback function. 
+
+If you need to later post additinal messages to Slack (e.g. when longer running work completes), you can send similarly formatted JSON object via HTTP POST to the URL provided in `ctx.body.response_url`. 
 
 This sample webtask demostrates this pattern:
 
 ```javascript
 module.exports = function (ctx, cb) {
-  // You only have 3 seconds to respond synchronously to Slack before your request times out
+  // Send a response to indicate work has started; useful if you foresee the code to take some time to comlete.
   sync_response(cb, `:hourglass: Working on it...`);
   setTimeout(() => {
-    // If your work is taking longer, you can respond asynchronously any number of times later
+    // Once work is completed, results can be posted asynchronously
     async_response(ctx, `Hello, @${ctx.body.user_name}!`);
-  }, 1000);
+  }, 5000);
 };
 
 function async_response(ctx, text, only_caller) {
   require('superagent').post(ctx.body.response_url)
-    .send({ text: text, response_type: only_caller ? undefined : 'in_channel' })
+    .send({ text: text, response_type: only_caller ? 'emphemeral' : 'in_channel' })
     .end();
 }
 
 function sync_response(cb, text, only_caller) {
-  cb(null, { text: text, response_type: only_caller ? undefined : 'in_channel' });
+  cb(null, { text: text, response_type: only_caller ? 'emphemeral' : 'in_channel' });
 }
 ```
