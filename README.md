@@ -61,8 +61,10 @@ This sample webtask demostrates this pattern:
 
 ```javascript
 module.exports = function (ctx, cb) {
-  // Send a response to indicate work has started; useful if you foresee the code to take some time to comlete.
+  // Send a response to indicate work has started.
+  // Useful if you foresee the code to take some time to comlete.
   sync_response(cb, `:hourglass: Working on it...`);
+  
   setTimeout(() => {
     // Once work is completed, results can be posted asynchronously
     async_response(ctx, `Hello, @${ctx.body.user_name}!`);
