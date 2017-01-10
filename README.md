@@ -55,7 +55,7 @@ The response your command sends back to Slack is a JSON object and is fully docu
 
 You can respond with a message that will be posted back to Slack by passing the [Slack JSON response message](https://api.slack.com/docs/messages/builder) as the second parameter to the callback function. 
 
-If you need to later post additinal messages to Slack (e.g. when longer running work completes), you can send similarly formatted JSON object via HTTP POST to the URL provided in `ctx.body.response_url`. 
+If you need to later post additinal messages to Slack (e.g. when longer running work completes), you can send similarly formatted JSON object via HTTP POST to the URL provided in `ctx.body.response_url`. You can do it multiple times.
 
 This sample webtask demostrates this pattern:
 
